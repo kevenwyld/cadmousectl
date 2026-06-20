@@ -182,7 +182,7 @@ static int cadmouse_pro_set_config(hid_device *mouse, int type, int val1, int va
                 report[btn_positions[idx]] = val2;
         }
         break;
-    case 5: /* liftoff detection (0x07) — mapping TBD */
+    case 5: /* liftoff detection (0x07) — uses 8-byte report format instead */
         break;
     }
 
@@ -210,6 +210,10 @@ int cadmouse_set_pollrate(hid_device *mouse, enum cadmouse_pollrate rate)
 
 int cadmouse_set_liftoff_detection(hid_device *mouse, int state)
 {
+    if (bt_fd >= 0) {
+        unsigned char report[8] = { 0x0c, 0x07, state ? 0x00 : 0x1f, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        return ioctl(bt_fd, HIDIOCSFEATURE(8), report);
+    }
     return cadmouse_send_command(mouse, 0x07, 0x00, state ? 0x00 : 0x1f);
 }
 
@@ -358,15 +362,10 @@ int main(int argc, char **argv)
                 {
                     long int liftdetect = strtol(optarg, NULL, 10);
 
-                    if (wireless) {
-                        /* Liftoff detection on Pro mice — mapping unknown, TBD */
-                        fputs("-l: not yet supported on Pro mice\n", stderr);
-                    } else {
-                        if (liftdetect == 0)
-                            COMMAND(cadmouse_set_liftoff_detection, 0);
-                        else
-                            COMMAND(cadmouse_set_liftoff_detection, 1);
-                    }
+                    if (liftdetect == 0)
+                        COMMAND(cadmouse_set_liftoff_detection, 0);
+                    else
+                        COMMAND(cadmouse_set_liftoff_detection, 1);
                 }
                 break;
             case 'p':
