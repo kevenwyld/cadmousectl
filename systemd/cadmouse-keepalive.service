@@ -1,0 +1,18 @@
+[Unit]
+Description=CadMouse keepalive daemon
+Documentation=file:///README.md
+After=local-fs.target
+Wants=udev.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/cadmousectl --keepalive
+Restart=on-failure
+RestartSec=2
+
+# Prevent systemd from closing the device fd
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

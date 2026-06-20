@@ -1,1 +1,5 @@
 KERNEL=="hidraw*", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c650", RUN+="/usr/bin/cadmousectl -l 1 -p 1000 -r wheel:extra -s 164 -S 1"
+
+# Disable USB autosuspend for Pro Wireless and Pro (keeps device from sleeping)
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c654", ATTR{power/control}="on"
+ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c656", ATTR{power/control}="on"
