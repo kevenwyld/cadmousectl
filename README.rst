@@ -31,6 +31,9 @@ each time it is disconnected. Therefore, you will probably want to set up
 ``cadmousectl`` to run automatically. Each rules file needs to be modified
 as necessary (the path to ``cadmousectl`` and the parameters).
 
+CadMouse Pro Wireless also supports Bluetooth — settings are applied the same
+way, but polling rate will be limited to ~89Hz.
+
 Linux
 ~~~~~
 
@@ -46,7 +49,7 @@ and reload ``devd``.
 Parameters
 ~~~~~~~~~~
 
-cadmousectl [-[lprsS] value]
+cadmousectl [-[lprsS] value] [--keepalive]
 
 +--------+---------------------------------------------------------+
 | Option | Effect                                                  |
@@ -54,6 +57,7 @@ cadmousectl [-[lprsS] value]
 | -l     | Enable (non-zero) or disable (zero) lift-off detection. |
 +--------+---------------------------------------------------------+
 | -p     | Set polling rate (125, 250, 500, 1000).                 |
+|        | Bluetooth: limited to ~89Hz regardless of setting.      |
 +--------+---------------------------------------------------------+
 | -r     | Remap buttons. Format is real_button:assigned_button.   |
 |        |                                                         |
@@ -92,6 +96,12 @@ cadmousectl [-[lprsS] value]
 |        | modes in that it does not simulate a flywheel but       |
 |        | instead sends more scroll wheel clicks the faster you   |
 |        | scroll.                                                 |
++--------+---------------------------------------------------------+
+| -k,    | Keep device alive (prevents USB disconnect).            |
+| --keepalive | Use with systemd for persistent keepalive:          |
+|        | ``sudo cp systemd/cadmouse-keepalive.service``          |
+|        | ``/etc/systemd/system/ && sudo systemctl``              |
+|        | ``enable --now cadmouse-keepalive``                     |
 +--------+---------------------------------------------------------+
 
 License
