@@ -30,6 +30,7 @@
 #include <hidapi.h>
 
 static int bt_fd = -1;
+static unsigned short cadmouse_pid = 0;   /* product id of the opened device */
 
 static int is_hidraw_bluetooth(const char *hidraw_name)
 {
@@ -136,9 +137,18 @@ static int cadmouse_pro_set_config(hid_device *mouse, int type, int val1, int va
     report[20] = 0x0b;     /* right */
     report[21] = 0x0c;     /* middle */
     report[22] = 0x0c;     /* wheel */
-    report[23] = 0x2d;     /* forward */
-    report[24] = 0x2e;     /* backward */
-    report[25] = 0x2f;     /* extra */
+    /* Forward/backward defaults differ per model (verified against USB captures
+     * of the official driver). The scroll button (byte 25) is left at 0x00,
+     * which the firmware treats as "keep this button's default function";
+     * writing any specific code here is what remapped the scroll button. */
+    if (cadmouse_pid == 0xc654) {   /* CadMouse Pro Wireless */
+        report[23] = 0x2d;     /* forward */
+        report[24] = 0x2e;     /* backward */
+    } else {                        /* CadMouse Pro (0xc656) */
+        report[23] = 0x0e;     /* forward */
+        report[24] = 0x0d;     /* backward */
+    }
+    report[25] = 0x00;     /* scroll button: keep firmware default */
     report[26] = 0x00;
     report[27] = 0x1e;     /* rm map */
     report[28] = 0x00;
@@ -317,11 +327,17 @@ int main(int argc, char **argv)
 
     hid_device *mouse = hid_open(0x256f, 0xc650, NULL);
     int wireless = 0;
+    if (mouse != NULL)
+        cadmouse_pid = 0xc650;
 
     if (mouse == NULL) {
         mouse = hid_open(0x256f, 0xc656, NULL);
+        if (mouse != NULL)
+            cadmouse_pid = 0xc656;
         if (mouse == NULL) {
             mouse = hid_open(0x256f, 0xc654, NULL);
+            if (mouse != NULL)
+                cadmouse_pid = 0xc654;
         }
         if (mouse != NULL)
             wireless = 1;
@@ -331,6 +347,9 @@ int main(int argc, char **argv)
         fputs("Could not find/open a CadMouse (wired or wireless)\n", stderr);
         goto error;
     }
+
+    fprintf(stderr, "Opened CadMouse 256f:%04x%s\n",
+            cadmouse_pid, wireless ? " (Pro/Wireless config protocol)" : "");
 
     /* Check if connected via Bluetooth */
     char hidraw_name[64] = {0};
