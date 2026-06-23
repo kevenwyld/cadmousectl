@@ -15,6 +15,11 @@ Linux
 
 ``cc cadmousectl.c -o cadmousectl $(pkg-config --cflags --libs hidapi-hidraw)``
 
+.. note::
+   In ``zsh``, unquoted command substitutions are not word-split, so wrap the
+   ``pkg-config`` part to split the flags:
+   ``cc cadmousectl.c -o cadmousectl ${=$(pkg-config --cflags --libs hidapi-hidraw)}``
+
 Windows, macOS, \*BSD, …
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -26,10 +31,18 @@ Windows builds are availabe on the GitHub Releases page.
 Usage
 =====
 
-This tool needs write access to the USB device. The mouse loses its settings
-each time it is disconnected. Therefore, you will probably want to set up
-``cadmousectl`` to run automatically. Each rules file needs to be modified
-as necessary (the path to ``cadmousectl`` and the parameters).
+This tool needs read/write access to the mouse's ``hidraw`` device. The
+supplied udev rules tag it with ``uaccess``, which automatically grants the
+logged-in local user access (over USB and Bluetooth), so you do not need to
+run ``cadmousectl`` as root. The mouse loses its settings each time it is
+disconnected. Therefore, you will probably want to set up ``cadmousectl`` to
+run automatically. Each rules file needs to be modified as necessary (the path
+to ``cadmousectl`` and the parameters).
+
+The CadMouse Pro (``256f:c656``) and CadMouse Pro Wireless (``256f:c654``)
+use a single configuration report for all settings, so pass every option you
+want in **one** invocation — running ``cadmousectl`` again for a different
+setting resets the previously set ones back to defaults.
 
 CadMouse Pro Wireless also supports Bluetooth — settings are applied the same
 way, but polling rate will be limited to ~89Hz.

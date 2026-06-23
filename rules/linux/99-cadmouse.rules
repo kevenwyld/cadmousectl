@@ -1,5 +1,42 @@
-KERNEL=="hidraw*", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c650", RUN+="/usr/bin/cadmousectl -l 1 -p 1000 -r wheel:extra -s 164 -S 1"
-
+# 3Dconnexion CadMouse udev rules
+#
+# Install:
+#   sudo cp rules/linux/99-cadmouse.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# For Bluetooth, reconnect the mouse afterwards.
+#
+# Matching note: USB-attached devices have a USB parent, so they are matched on
+# ATTRS{idVendor}/ATTRS{idProduct}. Bluetooth HID devices hang off a virtual
+# "uhid" device with NO USB parent, so ATTRS{idVendor} never matches them.
+# Instead they are matched by the parent HID device name, which embeds
+# bus:VID:PID (bus 0005 = Bluetooth), e.g. 0005:256F:C654.<instance>. The name
+# uses the short 4-hex-digit form (256F, not 0000256F), so the globs below
+# (0005:*256F:*C654.*) tolerate either form.
+# --- Non-root access -------------------------------------------------------
+# Grant the active local user an ACL on the CadMouse hidraw node(s) so that
+# cadmousectl can run without sudo.
+# USB:
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c650", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c656", TAG+="uaccess"
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c654", TAG+="uaccess"
+# Bluetooth:
+KERNEL=="hidraw*", KERNELS=="0005:*256F:*C654.*", TAG+="uaccess"
+KERNEL=="hidraw*", KERNELS=="0005:*256F:*C656.*", TAG+="uaccess"
+# --- Auto-apply settings on connect ----------------------------------------
+# The mouse forgets its settings when disconnected, so re-apply them on plug.
+# Edit the path/parameters to taste. For the Pro / Pro Wireless, pass every
+# setting in one invocation (a second run resets the others to defaults).
+# NOTE: over Bluetooth this matches each of the device's hidraw nodes, so the
+# command runs more than once; cadmousectl is idempotent, so that is harmless.
+# CadMouse (original, wired)
+KERNEL=="hidraw*", ACTION=="add", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c650", RUN+="/usr/bin/cadmousectl -l 1 -p 1000 -r wheel:extra -s 164 -S 1"
+# CadMouse Pro (c656) and Pro Wireless (c654), USB.
+# -r is intentionally omitted so the scroll button keeps its firmware default.
+KERNEL=="hidraw*", ACTION=="add", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c656", RUN+="/usr/bin/cadmousectl -l 1 -p 1000 -s 164 -S 1"
+KERNEL=="hidraw*", ACTION=="add", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c654", RUN+="/usr/bin/cadmousectl -l 1 -p 1000 -s 164 -S 1"
+# CadMouse Pro Wireless (c654) over Bluetooth.
+KERNEL=="hidraw*", ACTION=="add", KERNELS=="0005:*256F:*C654.*", RUN+="/usr/bin/cadmousectl -l 1 -p 1000 -s 164 -S 1"
+# --- Power management -------------------------------------------------------
 # Disable USB autosuspend for Pro Wireless and Pro (keeps device from sleeping)
 ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c654", ATTR{power/control}="on"
 ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="256f", ATTRS{idProduct}=="c656", ATTR{power/control}="on"
