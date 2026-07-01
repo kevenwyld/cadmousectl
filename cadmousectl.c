@@ -248,17 +248,11 @@ static void cadmouse_pro_default_config(unsigned char *report)
     report[21] = 0x0c;     /* middle */
     report[22] = 0x0c;     /* wheel */
     /* Forward/backward defaults differ per model (verified against USB captures
-     * of the official driver). The scroll button (byte 25) is left at 0x00,
-     * which the firmware treats as "keep this button's default function" */
-    if (cadmouse_pid == 0xc654) {   /* CadMouse Pro Wireless */
-        report[23] = 0x2d;     /* forward */
-        report[24] = 0x2e;     /* backward */
-    } else {                        /* CadMouse Pro (0xc656) */
-        report[23] = 0x0e;     /* forward */
-        report[24] = 0x0d;     /* backward */
-    }
-    report[25] = 0x00;     /* scroll button: keep firmware default */
-    report[27] = 0x1e;     /* rm map */
+     * of the official driver). Buttons left at 0x00 remain at firmware default */
+    report[23] = 0x00;     /* extra (side forward): firmware default */
+    report[24] = 0x00;     /* side (side back):     firmware default */
+    report[25] = 0x00;     /* scroll button:        firmware default */
+    report[27] = 0x00;     /* radial menu:          firmware default */
     report[31] = 0x01;     /* polling rate 1000Hz default */
 }
 
